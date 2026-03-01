@@ -1,4 +1,5 @@
 import The_pattern
+import Generate_Maze_Path
 
 class Cell:
     def __init__(self):
@@ -10,15 +11,18 @@ class Cell:
         }
 
 
-def print_maze(maze, raws, cols):
+def print_maze(maze, rows, cols, path):
     print("o" + "---o" * cols)
-    for r in range(raws):
+    for r in range(rows):
         vertical = "|"
         horizontal = "o"
         for c in range(cols):
             cell = maze[r][c]
 
-            vertical += "   "
+            if (r,c) in path:
+                vertical += " x "
+            else:
+                vertical += "   "
             if cell.Walls["Right"]:
                 vertical += "|"
             else:
@@ -33,16 +37,18 @@ def print_maze(maze, raws, cols):
         print(horizontal)
 
 
-def creat_maze(raws, cols):
+def creat_maze(rows, cols):
     Grid = []
-    for _ in range(raws):
+    for _ in range(rows):
         row = []
         for _ in range(cols):
             row.append(Cell())
         Grid.append(row)
-    if raws >= 7 and cols >= 9:
-        The_pattern.pattern_42(Grid, raws, cols)
-        print_maze(Grid, raws, cols)
+        exit = (rows-1, cols-1)
+    Generate_Maze_Path.generat_path(Grid, exit, rows, cols)
+    if rows >= 7 and cols >= 9:
+        The_pattern.pattern_42(Grid, rows, cols)
+        print_maze(Grid, rows, cols)
     else:
         print("The Demention that you put is to small for The MAZE")
 
