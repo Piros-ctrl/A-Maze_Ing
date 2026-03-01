@@ -1,3 +1,5 @@
+import The_pattern
+
 class Cell:
     def __init__(self):
         self.Walls = {
@@ -14,16 +16,19 @@ def print_maze(maze, raws, cols):
         vertical = "|"
         horizontal = "o"
         for c in range(cols):
-            Cell = maze[r][c]
+            cell = maze[r][c]
+
             vertical += "   "
-            if Cell.Walls["Bottom"]:
+            if cell.Walls["Right"]:
                 vertical += "|"
             else:
                 vertical += " "
-            if Cell.Walls["Right"]:
+
+            if cell.Walls["Bottom"]:
                 horizontal += "---o"
             else:
-                horizontal += "   "
+                horizontal += "   o"
+
         print(vertical)
         print(horizontal)
 
@@ -31,11 +36,20 @@ def print_maze(maze, raws, cols):
 def creat_maze(raws, cols):
     Grid = []
     for _ in range(raws):
-        raw = []
+        row = []
         for _ in range(cols):
-            raw.append(Cell())
-        Grid.append(raw)
-    print_maze(Grid, raws, cols)
+            row.append(Cell())
+        Grid.append(row)
+    if raws >= 7 and cols >= 9:
+        The_pattern.pattern_42(Grid, raws, cols)
+        print_maze(Grid, raws, cols)
+    else:
+        print("The Demention that you put is to small for The MAZE")
+
+def main():
+    rows = int(input("Enter length of The maze : "))
+    cols = int(input("Enter weigth of The maze : "))
+    creat_maze(rows, cols)
 
 
-creat_maze(4, 4)
+main()
