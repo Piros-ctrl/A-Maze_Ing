@@ -1,27 +1,30 @@
 def draw_4(Grid, r, c):
-    Grid[r][c].Walls["Bottom"] = False
-    Grid[r+1][c].Walls["Bottom"] = False
-    Grid[r+2][c].Walls["Right"] = False
-    Grid[r+2][c+1].Walls["Right"] = False
-    Grid[r+2][c+2].Walls["Bottom"] = False
-    Grid[r+3][c+2].Walls["Bottom"] = False
+    Grid[r][c].pattern = True
+    Grid[r+1][c].pattern = True
+    Grid[r+2][c].pattern = True
+    Grid[r+2][c+1].pattern = True
+    Grid[r+2][c+2].pattern = True
+    Grid[r+3][c+2].pattern = True
+    Grid[r+4][c+2].pattern = True
 
 
 def draw_2(Grid, r, c):
-    Grid[r][c].Walls["Right"] = False
-    Grid[r][c+1].Walls["Right"] = False
-    Grid[r][c+2].Walls["Bottom"] = False
-    Grid[r+1][c+2].Walls["Bottom"] = False
-    Grid[r+2][c+1].Walls["Right"] = False
-    Grid[r+2][c].Walls["Right"] = False
-    Grid[r+2][c].Walls["Bottom"] = False
-    Grid[r+3][c].Walls["Bottom"] = False
-    Grid[r+4][c].Walls["Right"] = False
-    Grid[r+4][c+1].Walls["Right"] = False
+    Grid[r][c].pattern = True
+    Grid[r][c+1].pattern = True
+    Grid[r][c+2].pattern = True
+    Grid[r+1][c+2].pattern = True
+    Grid[r+2][c+1].pattern = True
+    Grid[r+2][c+2].pattern = True
+    Grid[r+2][c].pattern = True
+    Grid[r+2][c].pattern = True
+    Grid[r+3][c].pattern = True
+    Grid[r+4][c].pattern = True
+    Grid[r+4][c+1].pattern = True
+    Grid[r+4][c+2].pattern = True
 
 
-def pattern_42(Grid, row, col):
-    r = (row - 5) // 2
-    c = (col - 7) // 2
+def pattern_42(Grid, hight, width):
+    r = (hight - 5) // 2
+    c = (width - 7) // 2
     draw_4(Grid, r, c)
     draw_2(Grid, r, c+4)

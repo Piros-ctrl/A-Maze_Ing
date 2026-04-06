@@ -1,61 +1,79 @@
-import The_pattern
-import Generate_Maze_Path
+from Generate_Maze_Path import generate_path, path_to_directions
+from The_pattern import pattern_42
+from D_F_S import dfs, N, E, S, W
+
 
 class Cell:
     def __init__(self):
-        self.Walls = {
-            "Top": True,
-            "Bottom": True,
-            "Left": True,
-            "Right": True
-        }
+        self.walls = N | E | S | W
+        self.visited = False
+        self.pattern = False
 
 
 def print_maze(maze, rows, cols, path):
-    print("o" + "---o" * cols)
+    height = rows * 2 + 1
+    width = cols * 4 + 1
+
+    canvas = []
+    for _ in range(height):
+        canvas.append([" "] * width)
+
     for r in range(rows):
-        vertical = "|"
-        horizontal = "o"
         for c in range(cols):
             cell = maze[r][c]
 
-            if (r,c) in path:
-                vertical += " x "
-            else:
-                vertical += "   "
-            if cell.Walls["Right"]:
-                vertical += "|"
-            else:
-                vertical += " "
+            y = r * 2
+            x = c * 4
 
-            if cell.Walls["Bottom"]:
-                horizontal += "---o"
-            else:
-                horizontal += "   o"
+            canvas[y][x] = "█"
+            canvas[y][x + 4] = "█"
+            canvas[y + 2][x] = "█"
+            canvas[y + 2][x + 4] = "█"
 
-        print(vertical)
-        print(horizontal)
+            if cell.walls & N:
+                canvas[y][x + 1] = "█"
+                canvas[y][x + 2] = "█"
+                canvas[y][x + 3] = "█"
+
+            if cell.walls & S:
+                canvas[y + 2][x + 1] = "█"
+                canvas[y + 2][x + 2] = "█"
+                canvas[y + 2][x + 3] = "█"
+
+            if cell.walls & W:
+                canvas[y + 1][x] = "█"
+
+            if cell.walls & E:
+                canvas[y + 1][x + 4] = "█"
+
+    for line in canvas:
+        print("".join(line))
 
 
-def creat_maze(rows, cols):
-    Grid = []
-    for _ in range(rows):
+def creat_maze(hight, width):
+    grid = []
+    for _ in range(hight):
         row = []
-        for _ in range(cols):
+        for _ in range(width):
             row.append(Cell())
-        Grid.append(row)
-        exit = (rows-1, cols-1)
-    Generate_Maze_Path.generat_path(Grid, exit, rows, cols)
-    if rows >= 7 and cols >= 9:
-        The_pattern.pattern_42(Grid, rows, cols)
-        print_maze(Grid, rows, cols)
-    else:
-        print("The Demention that you put is to small for The MAZE")
+        grid.append(row)
+    pattern_42(grid, hight, width)
+    dfs(grid, 0, 0, hight, width)
+    start = (0, 0)
+    exit = (6, 8)
+    path = generate_path(grid, hight, width, start, exit)
+    path_direction = path_to_directions(path)
+    print_maze(grid, hight, width, path)
+    print()
+    print(path_direction)
+
 
 def main():
-    rows = int(input("Enter length of The maze : "))
-    cols = int(input("Enter weigth of The maze : "))
-    creat_maze(rows, cols)
+    hight = int(input("Enter length of The maze : "))
+    # rows = 7
+    width = int(input("Enter weigth of The maze : "))
+    # cols = 9
+    creat_maze(hight, width)
 
 
 main()
