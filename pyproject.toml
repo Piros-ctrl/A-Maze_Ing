@@ -1,0 +1,9 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "The_Maze"
+version = "0.1.0"
+description = "A Maze Generator"
+authors = [{name = "azel-mah"}, {name = "oabderra"}]
