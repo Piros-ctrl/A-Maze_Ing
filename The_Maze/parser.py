@@ -85,6 +85,8 @@ def parser(config_file: str) -> Dict[str, Any]:
             print("ENTRY and EXIT cannot be the same")
             exit(1)
 
+        configs["ENTRY"] = entry
+        configs["EXIT"] = exit_coord
         perfect_value = configs["PERFECT"].lower()
         if perfect_value == "true":
             configs["PERFECT"] = True

@@ -21,6 +21,7 @@ BLUE = "\033[34m"
 RESET = "\033[0m"
 
 WALL = BLUE + "█" + RESET
+PATTERN = RED + "█" + RESET
 PATH = "⚽️"
 EMPTY = " "
 
@@ -252,9 +253,9 @@ class MazeGenerator:
                 maze[y + 2][x] = WALL
                 maze[y + 2][x + 4] = WALL
                 if cell.pattern:
-                    maze[y + 1][x + 1] = "■"
-                    maze[y + 1][x + 2] = "■"
-                    maze[y + 1][x + 3] = "■"
+                    maze[y + 1][x + 1] = PATTERN
+                    maze[y + 1][x + 2] = PATTERN
+                    maze[y + 1][x + 3] = PATTERN
                 if (row, col) in path:
                     maze[y + 1][x + 2] = PATH
                     maze[y + 1][x + 3] = ""
