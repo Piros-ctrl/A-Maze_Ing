@@ -1,4 +1,4 @@
 from .generator import MazeGenerator
+from .parser import parser
 
-
-__all__ = ["MazeGenerator"]
+__all__ = ["MazeGenerator", "parser"]
