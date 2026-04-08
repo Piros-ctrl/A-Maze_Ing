@@ -1,7 +1,11 @@
 import sys
+<<<<<<< HEAD
 from config_parser import parse_config
 from generator import MazeGenerator, WALL
 from typing import Dict
+=======
+from The_Maze import MazeGenerator, parser
+>>>>>>> 9b1a6ad4c53ecc90004f96214cb7095bab5e738c
 
 def interactive_mode(maze_config: Dict) -> None:
     show_path = True
@@ -55,11 +59,26 @@ def interactive_mode(maze_config: Dict) -> None:
             break
 
 def main() -> None:
+<<<<<<< HEAD
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
         return
 
     config_file = sys.argv[1]
+=======
+    conf = "config.txt"
+    conf = sys.argv[1]
+    result = parser(conf)
+    print(result)
+
+    maze = MazeGenerator(
+        width=result["WIDTH"],
+        height=result["HEIGHT"],
+        entry=result["ENTRY"],
+        exit_coor=result["EXIT"]
+    )
+    maze.create_maze()
+>>>>>>> 9b1a6ad4c53ecc90004f96214cb7095bab5e738c
 
     try:
         config = parse_config(config_file)
@@ -73,4 +92,8 @@ def main() -> None:
         print(f"Error: {e}")
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     main()
+=======
+    main()
+>>>>>>> 9b1a6ad4c53ecc90004f96214cb7095bab5e738c

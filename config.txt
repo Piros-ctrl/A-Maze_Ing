@@ -1,6 +1,6 @@
-# Maze Configuration
 WIDTH=10
 HEIGHT=10
+<<<<<<< HEAD
 
 
 ENTRY=0,1
@@ -9,3 +9,10 @@ OUTPUT_FILE=maze.txt
 PERFECT=True
 # SEED=42
 
+=======
+ENTRY=0,0
+EXIT=9,9
+OUTPUT_FILE=maze.txt
+PERFECT=True
+SEED=42
+>>>>>>> 9b1a6ad4c53ecc90004f96214cb7095bab5e738c
