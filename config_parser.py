@@ -1,115 +1,133 @@
-from typing import Dict, Any
+from typing import Any, Dict, Tuple
+
+# ====== aziz ==========================================================
+def _is_on_border(
+    coord: Tuple[int, int],
+    width: int,
+    height: int,
+) -> bool:
+    """Return True if coord is on the outer border of the maze."""
+    row, col = coord
+    return row == 0 or row == height - 1 or col == 0 or col == width - 1
 
 
-def is_valid_coord(coord: tuple, width: int, height: int) -> bool:
-    x, y = coord
-    return 0 <= x < width and 0 <= y < height
+def _is_valid_coord(
+    coord: Tuple[int, int],
+    width: int,
+    height: int,
+) -> bool:
+    """Return True if coord is inside maze bounds."""
+    row, col = coord
+    return 0 <= row < height and 0 <= col < width
 
 
 def parse_config(config_file: str) -> Dict[str, Any]:
-    configs: Dict[str, Any] = {}
+    """Parse and validate a maze configuration file."""
+    raw: Dict[str, str] = {}
 
     try:
         with open(config_file, "r") as f:
-            for line in f:
-                clean_line = line.split("#")[0].strip()
-                if not clean_line:
+            for line_num, line in enumerate(f, start=1):
+                # Remove inline comments and whitespace
+                clean = line.split("#")[0].strip()
+                if not clean:
                     continue
 
-                if "=" not in clean_line:
-                    print(f"Invalid line: {clean_line}")
-                    exit(1)
+                if "=" not in clean:
+                    raise ValueError(
+                        f"Line {line_num}: invalid format '{clean}' "
+                        "(expected KEY=VALUE)"
+                    )
 
-                parts = clean_line.split("=")
-                if len(parts) != 2:
-                    print(f"Invalid line: {clean_line}")
-                    exit(1)
-
-                key = parts[0].strip().upper()
-                value = parts[1].strip()
+                key, _, value = clean.partition("=")
+                key = key.strip().upper()
+                value = value.strip()
 
                 if not key or not value:
-                    print("KEY and VALUE cannot be empty")
-                    exit(1)
+                    raise ValueError(
+                        f"Line {line_num}: KEY and VALUE cannot be empty."
+                    )
 
-                configs[key] = value
-
-        required_keys = [
-            "WIDTH",
-            "HEIGHT",
-            "ENTRY",
-            "EXIT",
-            "OUTPUT_FILE",
-            "PERFECT",
-        ]
-
-        for key in required_keys:
-            if key not in configs:
-                print(f"Missing key: {key}")
-                exit(1)
-
-        try:
-            configs["WIDTH"] = int(configs["WIDTH"])
-            configs["HEIGHT"] = int(configs["HEIGHT"])
-        except ValueError:
-            print("WIDTH and HEIGHT must be numbers")
-            exit(1)
-
-        if configs["WIDTH"] < 10 or configs["HEIGHT"] < 10:
-            print("WIDTH and HEIGHT must be 10 or more")
-            exit(1)
-
-        try:
-            entry_parts = configs["ENTRY"].split(",")
-            exit_parts = configs["EXIT"].split(",")
-
-            if len(entry_parts) != 2 or len(exit_parts) != 2:
-                print("ENTRY and EXIT must be in x,y format")
-                exit(1)
-
-            entry = (int(entry_parts[0]), int(entry_parts[1]))
-            exit_coord = (int(exit_parts[0]), int(exit_parts[1]))
-        except ValueError:
-            print("ENTRY and EXIT must contain valid integers")
-            exit(1)
-
-        if not is_valid_coord(entry, configs["WIDTH"], configs["HEIGHT"]):
-            print("ENTRY is outside maze bounds")
-            exit(1)
-
-        if not is_valid_coord(exit_coord, configs["WIDTH"], configs["HEIGHT"]):
-            print("EXIT is outside maze bounds")
-            exit(1)
-
-        if entry == exit_coord:
-            print("ENTRY and EXIT cannot be the same")
-            exit(1)
-
-        configs["ENTRY"] = entry
-        configs["EXIT"] = exit_coord
-        perfect_value = configs["PERFECT"].lower()
-        if perfect_value == "true":
-            configs["PERFECT"] = True
-        elif perfect_value == "false":
-            configs["PERFECT"] = False
-        else:
-            print("PERFECT must be True or False")
-            exit(1)
-
-        if "SEED" in configs:
-            try:
-                configs["SEED"] = int(configs["SEED"])
-            except ValueError:
-                print("SEED must be a number")
-                exit(1)
-        else:
-            configs["SEED"] = None
-
-        return configs
+                raw[key] = value
 
     except FileNotFoundError:
-        print(f"File not found: {config_file}")
-        exit(1)
+        raise FileNotFoundError(f"Config file not found: '{config_file}'")
     except PermissionError:
-        print("Permission denied")
-        exit(1)
+        raise PermissionError(
+            f"Permission denied when reading: '{config_file}'"
+        )
+
+    # ── Check mandatory keys ──────────────────────────────────────────────────
+    mandatory = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
+    for key in mandatory:
+        if key not in raw:
+            raise ValueError(f"Missing mandatory key: {key}")
+
+    config: Dict[str, Any] = {}
+
+    # ── WIDTH and HEIGHT ──────────────────────────────────────────────────────
+    try:
+        config["WIDTH"] = int(raw["WIDTH"])
+        config["HEIGHT"] = int(raw["HEIGHT"])
+    except ValueError:
+        raise ValueError("WIDTH and HEIGHT must be integers.")
+
+    if config["WIDTH"] < 3 or config["HEIGHT"] < 3:
+        raise ValueError("WIDTH and HEIGHT must be at least 3.")
+    # ── ENTRY and EXIT ────────────────────────────────────────────────────────
+    for key in ("ENTRY", "EXIT"):
+        parts = raw[key].split(",")
+        if len(parts) != 2:
+            raise ValueError(
+                f"{key} must be in 'row,col' format. Got: '{raw[key]}'"
+            )
+        try:
+            coord: Tuple[int, int] = (int(parts[0]), int(parts[1]))
+        except ValueError:
+            raise ValueError(
+                f"{key} must contain valid integers. Got: '{raw[key]}'"
+            )
+
+        if not _is_valid_coord(coord, config["WIDTH"], config["HEIGHT"]):
+            raise ValueError(
+                f"{key} {coord} is out of bounds for a "
+                f"{config['WIDTH']}x{config['HEIGHT']} maze."
+            )
+
+        if not _is_on_border(coord, config["WIDTH"], config["HEIGHT"]):
+
+            raise ValueError(
+                f"{key} {coord} must be on the border of the maze."
+            )
+
+        config[key] = coord
+
+    if config["ENTRY"] == config["EXIT"]:
+        raise ValueError("ENTRY and EXIT must be different cells.")
+
+    # ── OUTPUT_FILE ───────────────────────────────────────────────────────────
+    config["OUTPUT_FILE"] = raw["OUTPUT_FILE"]
+
+    # ── PERFECT ───────────────────────────────────────────────────────────────
+    perfect_val = raw["PERFECT"].lower()
+    if perfect_val in ("true", "1", "yes"):
+        config["PERFECT"] = True
+    elif perfect_val in ("false", "0", "no"):
+        config["PERFECT"] = False
+    else:
+        raise ValueError(
+            f"PERFECT must be True or False. Got: '{raw['PERFECT']}'"
+        )
+
+    # ── SEED (optional) ───────────────────────────────────────────────────────
+    if "SEED" in raw:
+        try:
+            config["SEED"] = int(raw["SEED"])
+        except ValueError:
+            raise ValueError(
+                f"SEED must be an integer. Got: '{raw['SEED']}'"
+            )
+    else:
+        config["SEED"] = None
+
+    return config

@@ -1,18 +1,8 @@
-WIDTH=10
-HEIGHT=10
-<<<<<<< HEAD
-
-
-ENTRY=0,1
-EXIT=5,7
-OUTPUT_FILE=maze.txt
-PERFECT=True
-# SEED=42
-
-=======
+# A-Maze-ing — default configuration file
+WIDTH=15
+HEIGHT=15
 ENTRY=0,0
-EXIT=9,9
+EXIT=14,14
 OUTPUT_FILE=maze.txt
-PERFECT=True
-SEED=42
->>>>>>> 9b1a6ad4c53ecc90004f96214cb7095bab5e738c
+PERFECT=False
+# SEED=42
