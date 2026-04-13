@@ -1,0 +1,24 @@
+# Python cache
+__pycache__/
+
+
+# mypy
+.mypy_cache/
+
+# virtual environments
+venv/
+.venv/
+env/
+
+# pip package build
+dist/
+build/
+*.egg-info/
+
+
+# maze output file
+maze.txt
+
+
+# IDE
+.vscode/

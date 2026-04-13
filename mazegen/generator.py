@@ -1,15 +1,14 @@
 import random
+import os
 from typing import List, Optional, Tuple
-# ====== abderrahmane ==========================================================
-# ── Directions (bitmask) ──────────────────────────────────────────────────────
-N = 1   # 0001
-E = 2   # 0010
-S = 4   # 0100
-W = 8   # 1000
 
-OPPOSITE: dict = {N: S, E: W, S: N, W: E}
+N = 1
+E = 2
+S = 4
+W = 8
 
-# ── ANSI colors ───────────────────────────────────────────────────────────────
+OPPOSITE: dict[int, int] = {N: S, E: W, S: N, W: E}
+
 Cyan_BG = "\x1b[46m"
 Light_Gray = "\x1b[38;5;247m"
 Yellow_Green = "\x1b[38;5;154m"
@@ -23,7 +22,6 @@ ENTRY_SYMBOL = YELLOW + "E" + RESET
 EXIT_SYMBOL = YELLOW + "X" + RESET
 
 
-# ── Cell ──────────────────────────────────────────────────────────────────────
 class Cell:
     """Represents a single cell in the maze grid."""
 
@@ -34,7 +32,6 @@ class Cell:
         self.pattern: bool = False
 
 
-# ── MazeGenerator ─────────────────────────────────────────────────────────────
 class MazeGenerator:
     """Generates and solves a maze using DFS (generation) and BFS (solving)."""
 
@@ -70,7 +67,6 @@ class MazeGenerator:
             (0, -1, W),
         ]
 
-    # ── Wall helpers ──────────────────────────────────────────────────────────
     def break_wall(
         self,
         current: Cell,
@@ -102,25 +98,22 @@ class MazeGenerator:
 
         return neighbors
 
-    # ── DFS maze generation ───────────────────────────────────────────────────
+    # --- DFS maze generation ----------------------------------------
     def run_dfs(self, animate: bool = False) -> None:
         """Generate the maze using iterative DFS."""
         stack: List[Tuple[int, int]] = []
         entry_row, entry_col = self.entry
-    
-        if self.grid[entry_row][entry_col].pattern:
-            raise ValueError("ENTRY cell is inside the '42' pattern.")
-    
+
         self.grid[entry_row][entry_col].visited = True
         stack.append((entry_row, entry_col))
-    
+
         while stack:
             current_cell = stack[-1]
             neighbors = self._unvisited_neighbors(current_cell)
-    
+
             if animate:
                 self._draw_frame(current_cell)
-    
+
             if neighbors:
                 chosen = random.choice(neighbors)
                 new_row, new_col, direction = chosen
@@ -135,7 +128,7 @@ class MazeGenerator:
             else:
                 stack.pop()
 
-    # ── 42 pattern ────────────────────────────────────────────────────────────
+    # --- 42 pattern ----------------------------------------
     def draw_4(self, row: int, col: int) -> None:
         """Draw the digit '4' starting at (row, col). Needs 5 rows x 3 cols."""
         self.grid[row][col].pattern = True
@@ -160,7 +153,6 @@ class MazeGenerator:
         self.grid[row + 4][col + 1].pattern = True
         self.grid[row + 4][col + 2].pattern = True
 
-
     def symbol_42(self) -> None:
         """Draw the '42' pattern in the center of the maze."""
         row = (self.height - 5) // 2
@@ -168,7 +160,7 @@ class MazeGenerator:
         self.draw_4(row, col)
         self.draw_2(row, col + 4)
 
-    # ── BFS solver ────────────────────────────────────────────────────────────
+    # --- BFS solver ----------------------------------------
     def _reset_visited(self) -> None:
         """Reset the visited flag on all non-pattern cells."""
         for row in range(self.height):
@@ -181,9 +173,9 @@ class MazeGenerator:
         self._reset_visited()
 
         queue: List[Tuple[int, int]] = [self.entry]
-        parent: dict = {}
-        visited: set = set()
-        visited.add(self.entry)
+        parent: dict[tuple[int, int], tuple[int, int]] = {}
+        r, c = self.entry
+        self.grid[r][c].visited = True
 
         while queue:
             row, col = queue.pop(0)
@@ -201,10 +193,10 @@ class MazeGenerator:
                     0 <= new_row < self.height
                     and 0 <= new_col < self.width
                     and not (cell.walls & direction)
-                    and (new_row, new_col) not in visited
+                    and not self.grid[new_row][new_col].visited
                     and not self.grid[new_row][new_col].pattern
                 ):
-                    visited.add((new_row, new_col))
+                    self.grid[new_row][new_col].visited = True
                     parent[(new_row, new_col)] = (row, col)
                     queue.append((new_row, new_col))
 
@@ -212,7 +204,7 @@ class MazeGenerator:
 
     def _rebuild_path(
         self,
-        parent: dict,
+        parent: dict[tuple[int, int], tuple[int, int]],
         start: Tuple[int, int],
         end: Tuple[int, int],
     ) -> List[Tuple[int, int]]:
@@ -244,53 +236,7 @@ class MazeGenerator:
                 directions += "W"
         return directions
 
-    # ── Perfect maze check ────────────────────────────────────────────────────
-    # ====== aziz ==========================================================
-    def is_perfect(self) -> bool:
-        """Check whether the maze is perfect (one unique path between any two cells).
-
-        A perfect maze is equivalent to a spanning tree:
-        all non-pattern cells are reachable from entry,
-        and there are no loops.
-
-        Returns:
-            True if the maze is perfect, False otherwise.
-        """
-        self._reset_visited()
-
-        # Count normal (non-pattern) cells
-        normal_cells = sum(
-            1
-            for r in range(self.height)
-            for c in range(self.width)
-            if not self.grid[r][c].pattern
-        )
-
-        # BFS from entry
-        visited: set = set()
-        queue = [self.entry]
-        visited.add(self.entry)
-
-        while queue:
-            row, col = queue.pop(0)
-            cell = self.grid[row][col]
-
-            for dr, dc, direction in self.directions:
-                new_row = row + dr
-                new_col = col + dc
-                if (
-                    0 <= new_row < self.height
-                    and 0 <= new_col < self.width
-                    and not (cell.walls & direction)
-                    and (new_row, new_col) not in visited
-                    and not self.grid[new_row][new_col].pattern
-                ):
-                    visited.add((new_row, new_col))
-                    queue.append((new_row, new_col))
-
-        return len(visited) == normal_cells
-
-    # ── Open areas fix ────────────────────────────────────────────────────────
+    # --- Open areas fix ----------------------------------------
     def _is_open_3x3(self, row: int, col: int) -> bool:
         """Check if a 3x3 block starting at (row, col) is fully open.
 
@@ -299,7 +245,8 @@ class MazeGenerator:
             col : top-left column
 
         Returns:
-            True if the area has no internal walls (fully open 3x3), else False.
+            True if the area has no internal walls
+            (fully open 3x3), else False.
         """
         for r in range(row, row + 3):
             for c in range(col, col + 3):
@@ -326,8 +273,7 @@ class MazeGenerator:
                     self.grid[row + 1][col + 1].walls |= S
                     self.grid[row + 2][col + 1].walls |= N
 
-    # ── ASCII display ─────────────────────────────────────────────────────────
-    # ====== abderrahmane =========================================================
+    # --- ASCII display ----------------------------------------
     def print_maze(self, path: List[Tuple[int, int]]) -> None:
         """Print the maze to the terminal using ASCII/Unicode characters."""
         path_set = set(path)
@@ -379,8 +325,6 @@ class MazeGenerator:
         for line in display:
             print("".join(line))
 
-    # ── Main entry point ──────────────────────────────────────────────────────
-    # ====== aziz ==========================================================
     def create_maze(
         self,
         algorithm: str = "dfs",
@@ -389,21 +333,25 @@ class MazeGenerator:
         """Generate the full maze."""
         if self.height > 7 and self.width > 9:
             self.symbol_42()
+            if self.grid[self.entry[0]][self.entry[1]].pattern:
+                raise ValueError(
+                    f"ENTRY {self.entry} is inside the '42' pattern."
+                    )
+            if self.grid[self.exit[0]][self.exit[1]].pattern:
+                raise ValueError(
+                    f"EXIT {self.exit} is inside the '42' pattern."
+                    )
 
         if algorithm == "prim":
             self.run_prims(animate=animate)
         else:
             self.run_dfs(animate=animate)
-    
-        self.fix_open_areas()
-    
-        if self.perfect and not self.is_perfect():
-            raise ValueError(
-                "Generated maze is not perfect. Try a different seed."
-            )
-    
 
-    # ====== abderrahmane ==========================================================
+        self.fix_open_areas()
+
+        if not self.perfect:
+            self._add_loops()
+
     def _draw_frame(
         self,
         current: Tuple[int, int],
@@ -459,13 +407,12 @@ class MazeGenerator:
                     display[y + 1][x + 4] = WALL
 
         # Clear screen then print new frame
-        sys.stdout.write("\033[H\033[J")
+        os.system("clear")
         for line in display:
             sys.stdout.write("".join(line) + "\n")
         sys.stdout.write(" Generating maze...\n")
         sys.stdout.flush()
         time.sleep(0.03)
-    # --------------------------------------------------
 
     def run_prims(self, animate: bool = False) -> None:
         """Generate maze using Randomised Prim's algorithm."""
@@ -511,3 +458,36 @@ class MazeGenerator:
                     and not self.grid[nnr][nnc].pattern
                 ):
                     frontier.append((nr, nc, nnr, nnc, d))
+
+    def _add_loops(self) -> None:
+        """Break extra walls to create multiple paths (imperfect maze)."""
+        extra = max(1, (self.width * self.height) // 10)
+
+        attempts = 0
+        broken = 0
+
+        while broken < extra and attempts < extra * 20:
+            attempts += 1
+
+            row = random.randint(0, self.height - 2)
+            col = random.randint(0, self.width - 2)
+
+            if self.grid[row][col].pattern:
+                continue
+
+            dr, dc, direction = random.choice(self.directions)
+            nr, nc = row + dr, col + dc
+
+            if not (0 <= nr < self.height and 0 <= nc < self.width):
+                continue
+
+            if self.grid[nr][nc].pattern:
+                continue
+
+            if self.grid[row][col].walls & direction:
+                self.break_wall(
+                    self.grid[row][col],
+                    self.grid[nr][nc],
+                    direction,
+                )
+                broken += 1

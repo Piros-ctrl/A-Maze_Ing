@@ -1,15 +1,5 @@
 from typing import Any, Dict, Tuple
 
-# ====== aziz ==========================================================
-def _is_on_border(
-    coord: Tuple[int, int],
-    width: int,
-    height: int,
-) -> bool:
-    """Return True if coord is on the outer border of the maze."""
-    row, col = coord
-    return row == 0 or row == height - 1 or col == 0 or col == width - 1
-
 
 def _is_valid_coord(
     coord: Tuple[int, int],
@@ -24,6 +14,15 @@ def _is_valid_coord(
 def parse_config(config_file: str) -> Dict[str, Any]:
     """Parse and validate a maze configuration file."""
     raw: Dict[str, str] = {}
+    ALLOWED_KEYS = {
+                    "WIDTH", "HEIGHT", "ENTRY", "EXIT",
+                    "OUTPUT_FILE", "PERFECT", "SEED",
+                }
+    NOT_ALLOWED_NAME = {
+        "a_maze_ing.py", "generator.py", "config_parser.py",
+        "README.md", "requirements.txt", "pyproject.toml",
+        "config.txt", "Makefile", ".gitignore", "__init__.py"
+    }
 
     try:
         with open(config_file, "r") as f:
@@ -48,6 +47,25 @@ def parse_config(config_file: str) -> Dict[str, Any]:
                         f"Line {line_num}: KEY and VALUE cannot be empty."
                     )
 
+                if key not in ALLOWED_KEYS:
+                    raise ValueError(
+                        f"Line {line_num}: unknown key '{key}'. "
+                        f"Allowed keys: {', '.join(sorted(ALLOWED_KEYS))}"
+                    )
+
+                if key == "OUTPUT_FILE":
+                    if value in NOT_ALLOWED_NAME:
+                        raise ValueError(
+                            f"OUTPUT_FILE '{value}' is not allowed. "
+                            f"Choose a different filename."
+                        )
+
+                if key in raw:
+                    raise ValueError(
+                        f"Line {line_num}: duplicate key '{key}' "
+                        f"(already defined with value '{raw[key]}')."
+                    )
+
                 raw[key] = value
 
     except FileNotFoundError:
@@ -57,7 +75,7 @@ def parse_config(config_file: str) -> Dict[str, Any]:
             f"Permission denied when reading: '{config_file}'"
         )
 
-    # ── Check mandatory keys ──────────────────────────────────────────────────
+    # --- Check mandatory keys -----------------------------------------------
     mandatory = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
     for key in mandatory:
         if key not in raw:
@@ -65,7 +83,7 @@ def parse_config(config_file: str) -> Dict[str, Any]:
 
     config: Dict[str, Any] = {}
 
-    # ── WIDTH and HEIGHT ──────────────────────────────────────────────────────
+    # --- WIDTH and HEIGHT -------------------------------------------------
     try:
         config["WIDTH"] = int(raw["WIDTH"])
         config["HEIGHT"] = int(raw["HEIGHT"])
@@ -74,7 +92,7 @@ def parse_config(config_file: str) -> Dict[str, Any]:
 
     if config["WIDTH"] < 3 or config["HEIGHT"] < 3:
         raise ValueError("WIDTH and HEIGHT must be at least 3.")
-    # ── ENTRY and EXIT ────────────────────────────────────────────────────────
+    # --- ENTRY and EXIT -------------------------------------------------
     for key in ("ENTRY", "EXIT"):
         parts = raw[key].split(",")
         if len(parts) != 2:
@@ -94,21 +112,15 @@ def parse_config(config_file: str) -> Dict[str, Any]:
                 f"{config['WIDTH']}x{config['HEIGHT']} maze."
             )
 
-        if not _is_on_border(coord, config["WIDTH"], config["HEIGHT"]):
-
-            raise ValueError(
-                f"{key} {coord} must be on the border of the maze."
-            )
-
         config[key] = coord
 
     if config["ENTRY"] == config["EXIT"]:
         raise ValueError("ENTRY and EXIT must be different cells.")
 
-    # ── OUTPUT_FILE ───────────────────────────────────────────────────────────
+    # --- OUTPUT_FILE -------------------------------------------------
     config["OUTPUT_FILE"] = raw["OUTPUT_FILE"]
 
-    # ── PERFECT ───────────────────────────────────────────────────────────────
+    # --- PERFECT -------------------------------------------------
     perfect_val = raw["PERFECT"].lower()
     if perfect_val in ("true", "1", "yes"):
         config["PERFECT"] = True
@@ -119,7 +131,7 @@ def parse_config(config_file: str) -> Dict[str, Any]:
             f"PERFECT must be True or False. Got: '{raw['PERFECT']}'"
         )
 
-    # ── SEED (optional) ───────────────────────────────────────────────────────
+    # --- SEED (optional) -------------------------------------------------
     if "SEED" in raw:
         try:
             config["SEED"] = int(raw["SEED"])

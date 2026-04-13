@@ -1,3 +1,4 @@
 flake8>=6.0.0
 mypy>=1.0.0
 build>=0.10.0
+mazegen-1.0.0-py3-none-any.whl

@@ -1,9 +1,17 @@
 [build-system]
 requires = ["setuptools>=61.0"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "mazegen"
 version = "1.0.0"
-description = "A maze generator library"
+description = "A maze generator library supporting DFS and Prim algorithms."
 requires-python = ">=3.10"
+authors = [
+    { name = "azel-mah" },
+    { name = "oabderra" }
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mazegen*"]

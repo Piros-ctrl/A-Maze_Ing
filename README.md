@@ -1,142 +1,115 @@
-# A-Maze-ing 🏰
-
-A Python maze generator using **DFS** (generation) and **BFS** (solving).
+*This project has been created as part of the 42 curriculum by azel-mah and oabderra.*
 
 ---
 
-## Usage
+# A-Maze-ing
+
+## Description
+
+A-Maze-ing is a maze generator and solver written in Python 3. It reads a configuration file, generates a random maze containing a **"42"** pattern, solves it using BFS, and displays everything in an interactive terminal interface.
+
+---
+
+## Instructions
 
 ```bash
+# Install dependencies
+make install
+
+# Run the program
 python3 a_maze_ing.py config.txt
 ```
 
-### Controls
+---
+
+## Configuration File Format
+
+```ini
+WIDTH=20          # number of columns (>9 for '42' pattern)
+HEIGHT=15         # number of rows (>7 for '42' pattern)
+ENTRY=0,0         # row,col — must be on the border
+EXIT=14,19        # row,col — must be on the border
+OUTPUT_FILE=maze.txt
+PERFECT=True      # True = one unique path between any two cells
+SEED=42           # optional — for reproducibility
+ALGORITHM=dfs     # dfs | prim
+ANIMATE=False     # True = live generation animation
+```
+
+---
+
+## Interactive Controls
 
 | Key | Action |
 |-----|--------|
-| `R` | Re-generate a new maze |
-| `P` | Show / Hide solution path |
-| `C` | Cycle wall colours |
+| `R` | Re-generate maze |
+| `P` | Show / hide solution path |
+| `C` | Change wall colour |
+| `A` | Toggle animation |
+| `D` | Switch to DFS |
+| `M` | Switch to Prim |
 | `Q` | Quit |
 
 ---
 
-## Configuration file (`config.txt`)
+## Maze Generation Algorithm
 
-```ini
-# Maze dimensions
-WIDTH=20
-HEIGHT=15
+Two algorithms are supported:
 
-# Entry and Exit: row,col (must be on the border)
-ENTRY=0,0
-EXIT=14,19
+**DFS (default):** Starts from the entry, randomly carves paths using a stack, backtracks when stuck. Produces long winding corridors. Chosen for its simplicity and natural perfect maze generation.
 
-# Output file
-OUTPUT_FILE=maze.txt
-
-# Perfect maze (one unique path between any two cells)
-PERFECT=True
-
-# Optional seed for reproducibility
-SEED=42
-```
+**Prim (bonus):** Grows the maze outward from the entry by randomly picking walls from a frontier list. Produces more branching mazes with shorter dead-ends.
 
 ---
 
-## Output file format
+## Reusable Module — `mazegen`
 
-Each cell is one hexadecimal digit encoding its closed walls:
-
-| Bit | Direction |
-|-----|-----------|
-| 0 (LSB) | North |
-| 1 | East |
-| 2 | South |
-| 3 | West |
-
-Example: `A` = `1010` = East and West walls closed.
-
-After an empty line, the file contains:
-1. Entry coordinates
-2. Exit coordinates
-3. Shortest path as a string of `N`/`E`/`S`/`W`
-
----
-
-## mazegen — reusable package
-
-### Install
+The `MazeGenerator` class is packaged as a standalone pip library.
 
 ```bash
 pip install mazegen-1.0.0-py3-none-any.whl
 ```
 
-### Basic example
-
 ```python
 from mazegen import MazeGenerator
 
-maze = MazeGenerator(
-    width=20,
-    height=15,
-    entry=(0, 0),
-    exit=(14, 19),
-    perfect=True,
-    seed=42,
-)
+maze = MazeGenerator(20, 15, (0, 0), (14, 19), seed=42)
 maze.create_maze()
 path = maze.solve_maze()
-print(maze.path_to_string(path))  # e.g. 'EESSSWWN...'
+print(maze.path_to_string(path))  # e.g. "EESSNEEE..."
 maze.print_maze(path)
 ```
 
-### Custom parameters
+Access the grid: `maze.grid[row][col].walls` — int bitmask (N=1, E=2, S=4, W=8)
 
-```python
-# Without seed (random each time)
-maze = MazeGenerator(width=30, height=20, entry=(0,0), exit=(19,29))
-
-# Non-perfect maze (multiple paths allowed)
-maze = MazeGenerator(width=20, height=15, entry=(0,0), exit=(14,19), perfect=False)
-```
-
-### Accessing the maze structure
-
-```python
-maze.create_maze()
-
-# 2D grid of Cell objects
-cell = maze.grid[row][col]
-print(cell.walls)    # int bitmask: N=1, E=2, S=4, W=8
-print(cell.pattern)  # True if part of '42' decoration
-
-# Solve and get path
-path = maze.solve_maze()              # list of (row, col) tuples
-directions = maze.path_to_string(path)  # 'EESSSWWN...'
+Build from source:
+```bash
+pip install build && python3 -m build
 ```
 
 ---
 
-## Build the package from source
+## Team
 
-```bash
-cd mazegen/
-pip install build
-python3 -m build
-# produces: dist/mazegen-1.0.0-py3-none-any.whl
-```
+Member Roles:
+
+-Aziz: Config parser,  show_welcome ,show_goodbye, interactive mode, packaging.
+
+-Abderrahmane: DFS/Prim algorithms, animation, output file, BFS solver.
+
+**Planning:** We split the work by module from the start. The main challenge was the BFS bug (visited set on pop instead of push) and ANSI border alignment. Overall the project went smoothly.
+
+**What worked well:** Clean separation between modules. **To improve:** Adding Kruskal and graphical display.
+
+**Tools used:** Python 3, flake8, mypy, Git, VS Code, Claude (AI).
 
 ---
 
-## Makefile
+## Resources
 
-```bash
-make install      # install dependencies
-make run          # run the maze
-make debug        # run with pdb debugger
-make clean        # remove cache files
-make lint         # flake8 + mypy
-make lint-strict  # flake8 + mypy --strict
-make package      # build the mazegen pip package
-```
+- [Maze generation algorithms — Wikipedia](https://en.wikipedia.org/wiki/Maze_generation_algorithm)
+- [Buckblog — Maze algorithms](https://weblog.jamisbuck.org/2011/2/7/maze-generation-algorithm-recap)
+- [BFS — Wikipedia](https://en.wikipedia.org/wiki/Breadth-first_search)
+- [Python packaging guide](https://packaging.python.org/en/latest/)
+
+**AI usage (Claude):** Used to fix the BFS bug, explain Prim's algorithm, solve ANSI border alignment, and help structure the README. All output was reviewed and tested before use.
